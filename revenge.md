@@ -454,7 +454,9 @@ Following `r12`'s provenance leads it the word pointed to by the first argument
 to `vatsim_auth_generate_response`. Which, as discovered in `vatsim_auth_create`,
 is the client id being stored at offset 0 in the `vatsim_auth` struct.
 
-Pseudo code for the concatenation is as follows:
+#### Response algorithm
+
+Pseudocode for the response is as follows:
 
 ```C
 split state into s1 s2 s3
@@ -464,10 +466,12 @@ if clientId & 1
 else
   split challenge into c2, c1
 
-case clientId % 3 of
-  0 -> concat s1 c1 s2 c2 s3
-  1 -> concat s2 c1 s3 c2 s1
-  _ -> concat nothing // lol
+response = case clientId % 3 of
+  0 -> md5(concat s1 c1 s2 c2 s3)
+  1 -> md5(concat s2 c1 s3 c2 s1)
+  _ -> md5("") // lol
+
+state = md5(init + response)
 ```
 
 I'm perplexed as to why there is a code path leading to no useful hashing. If
